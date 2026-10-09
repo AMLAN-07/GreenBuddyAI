@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenBuddy AI | Grow Outside</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="hero">
+        <div class="brand">🌿 GreenBuddy AI</div>
+        <p class="eyebrow">LESS SCREEN. MORE GREEN.</p>
+        <h1>Grow something<br>beautiful today.</h1>
+        <p>Your local AI gardening companion. Get advice, step outside, and grow at your own pace.</p>
+        <a href="#assistant" class="primary-button">Ask your garden assistant ↓</a>
+    </header>
+
+    <main>
+        <section class="panel" id="plant-id">
+            <p class="eyebrow">MEET YOUR GREEN FRIENDS</p>
+            <h2>Identify a plant 🌿</h2>
+            <p>Choose a clear photo of a leaf, flower, or whole plant.</p>
+
+            <form id="plant-form">
+                <label for="plant-photo">Choose a plant photo</label>
+                <input
+                    type="file"
+                    id="plant-photo"
+                    name="photo"
+                    accept="image/jpeg,image/png,image/webp"
+                    required
+                >
+
+                <button class="primary-button" type="submit" id="identify-button">
+                    Identify my plant
+                </button>
+
+                <button class="primary-button" id="care-button" type="button">
+                    Get plant care advice 🌱
+                </button>
+
+<div id="care-result" class="answer" aria-live="polite"></div>
+            </form>
+
+            <div id="plant-result" class="answer" aria-live="polite">
+                Your plant predictions will appear here.
+            </div>
+        </section>
+        
+<section class="panel" id="planting-planner">
+    <p class="eyebrow">GROW WITH THE SEASONS</p>
+    <h2>Your planting planner 🪴</h2>
+    <p>Get a gardening plan suited to your region and growing space.</p>
+
+    <form id="planner-form">
+        <label for="garden-location">City or region</label>
+        <input
+            id="garden-location"
+            name="location"
+            type="text"
+            value="Bhubaneswar, Odisha, India"
+            maxlength="100"
+            required
+        >
+
+        <label for="garden-season">Planning period</label>
+        <select id="garden-season">
+            <option>October–November</option>
+            <option>December–January</option>
+            <option>February–March</option>
+            <option>April–June</option>
+            <option>July–September</option>
+        </select>
+
+        <label for="garden-space">Growing space</label>
+        <select id="garden-space">
+            <option>Balcony pots</option>
+            <option>Backyard garden</option>
+            <option>Indoor containers</option>
+            <option>Community garden</option>
+        </select>
+
+        <button class="primary-button" type="submit" id="planner-button">
+            Create my planting plan
+        </button>
+    </form>
+
+    <div id="planner-result" class="answer" aria-live="polite">
+        Your personalized planting plan will appear here.
+    </div>
+</section>
+
+
+        <section class="panel">
+            <p class="eyebrow">YOUR DAILY RESET</p>
+            <h2>Today's outdoor missions</h2>
+            <p>Choose one small activity. Every little bit of nature counts.</p>
+            <div class="mission-list">
+                {% for mission in missions %}
+                <label class="mission">
+                    <input type="checkbox">
+                    <span>{{ mission }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <p id="progress">0 missions completed 🌱</p>
+        </section>
+
+        <section class="panel" id="assistant">
+            <p class="eyebrow">POWERED BY LOCAL AI</p>
+            <h2>Ask GreenBuddy</h2>
+            <p>Ask about seeds, soil, watering, sunlight, or plant care.</p>
+
+            <form id="question-form">
+                <label for="question">Your gardening question</label>
+                <textarea id="question" maxlength="1000"
+                    placeholder="Why are my tomato leaves turning yellow?"
+                    required></textarea>
+                <button class="primary-button" id="ask-button" type="submit">
+                    Ask GreenBuddy
+                </button>
+            </form>
+
+            <div id="answer" class="answer" aria-live="polite">
+                Your gardening advice will appear here.
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>🌱 GreenBuddy AI — Let nature be your next adventure.</p>
+        <p>AI advice can be imperfect. Verify plant identification and safety-critical recommendations.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
