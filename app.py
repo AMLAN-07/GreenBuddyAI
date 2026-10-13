@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, jsonify
 import requests
-
+import csv
+import os
+from datetime import datetime
+from flask import request, jsonify, render_template
 from io import BytesIO
 from PIL import Image, UnidentifiedImageError
 from transformers import pipeline
@@ -34,6 +37,11 @@ def get_plant_classifier():
         )
 
     return plant_classifier
+
+
+@app.route("/tasks")
+def gardening_tasks():
+    return render_template("tasks.html")
 
 @app.route("/")
 def home():
@@ -285,6 +293,103 @@ def planting_plan():
             "error": "Could not contact Ollama. Make sure it is running."
         }), 503
 
+@app.route("/feedback")
+def feedback_page():
+    return render_template("feedback.html")
+
+
+@app.route("/api/feedback", methods=["POST"])
+def save_feedback():
+    data = request.get_json(silent=True) or {}
+
+    required_fields = [
+        "task",
+        "ease",
+        "usefulness",
+        "would_use",
+        "comments",
+    ]
+
+    if any(not str(data.get(field, "")).strip()
+           for field in required_fields):
+        return jsonify({
+            "success": False,
+            "message": "Please complete all required fields."
+        }), 400
+
+    allowed_tasks = {
+        "Plant identification",
+        "Plant care advice",
+        "Planting planner",
+        "Outdoor missions",
+    }
+    allowed_ratings = {"1", "2", "3", "4", "5"}
+    allowed_use = {
+        "Yes",
+        "Maybe",
+        "No",
+    }
+
+    if data["task"] not in allowed_tasks:
+        return jsonify({"success": False,
+                        "message": "Invalid task."}), 400
+
+    if str(data["ease"]) not in allowed_ratings:
+        return jsonify({"success": False,
+                        "message": "Invalid ease rating."}), 400
+
+    if str(data["usefulness"]) not in allowed_ratings:
+        return jsonify({"success": False,
+                        "message": "Invalid usefulness rating."}), 400
+
+    if data["would_use"] not in allowed_use:
+        return jsonify({"success": False,
+                        "message": "Invalid answer."}), 400
+
+    comments = str(data["comments"]).strip()
+
+    if len(comments) > 2000:
+        return jsonify({"success": False,
+                        "message": "Comments must be under 2000 characters."}), 400
+
+    feedback_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "user_feedback.csv"
+    )
+
+    file_exists = os.path.exists(feedback_file)
+
+    with open(feedback_file, "a", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=[
+                "timestamp",
+                "task",
+                "ease",
+                "usefulness",
+                "would_use",
+                "comments",
+            ]
+        )
+
+        if not file_exists:
+            writer.writeheader()
+
+        writer.writerow({
+            "timestamp": datetime.now().astimezone().isoformat(
+                timespec="seconds"
+            ),
+            "task": data["task"],
+            "ease": data["ease"],
+            "usefulness": data["usefulness"],
+            "would_use": data["would_use"],
+            "comments": comments,
+        })
+
+    return jsonify({
+        "success": True,
+        "message": "Thank you! Your feedback has been saved."
+    })
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

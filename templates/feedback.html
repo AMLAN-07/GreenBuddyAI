@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenBuddy AI | User Feedback</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f8ed;
+            color: #203b2a;
+            max-width: 650px;
+            margin: 35px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 4px 18px #00000010;
+        }
+
+        h1 { color: #287444; }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 18px;
+        }
+
+        select, textarea {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            border: 1px solid #b9cdbb;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            margin-top: 22px;
+            width: 100%;
+            padding: 14px;
+            border: 0;
+            border-radius: 8px;
+            background: #287444;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #status { margin-top: 16px; }
+        .note { color: #52675a; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>🌱 GreenBuddy AI Feedback</h1>
+    <p>Thanks for testing GreenBuddy AI! Your honest feedback will
+       help improve the gardening assistant.</p>
+
+    <p class="note">
+        This form does not ask for your name or email. Your responses
+        are saved locally by the developer for project improvement.
+    </p>
+
+    <form id="feedbackForm">
+        <label for="task">1. What did you try?</label>
+        <select id="task" required>
+            <option value="">Choose a feature</option>
+            <option>Plant identification</option>
+            <option>Plant care advice</option>
+            <option>Planting planner</option>
+            <option>Outdoor missions</option>
+        </select>
+
+        <label for="ease">2. How easy was it to use? (1 = difficult, 5 = very easy)</label>
+        <select id="ease" required>
+            <option value="">Choose a rating</option>
+            <option value="1">1 - Difficult</option>
+            <option value="2">2 - Somewhat difficult</option>
+            <option value="3">3 - Okay</option>
+            <option value="4">4 - Easy</option>
+            <option value="5">5 - Very easy</option>
+        </select>
+
+        <label for="usefulness">3. How useful was it? (1 = not useful, 5 = very useful)</label>
+        <select id="usefulness" required>
+            <option value="">Choose a rating</option>
+            <option value="1">1 - Not useful</option>
+            <option value="2">2 - Slightly useful</option>
+            <option value="3">3 - Moderately useful</option>
+            <option value="4">4 - Very useful</option>
+            <option value="5">5 - Extremely useful</option>
+        </select>
+
+        <label for="would_use">4. Would you use GreenBuddy AI again?</label>
+        <select id="would_use" required>
+            <option value="">Choose an answer</option>
+            <option>Yes</option>
+            <option>Maybe</option>
+            <option>No</option>
+        </select>
+
+        <label for="comments">5. What should we improve?</label>
+        <textarea id="comments" rows="4" maxlength="2000"
+                  required placeholder="What worked? What was confusing?"></textarea>
+
+        <button type="submit">Submit Feedback</button>
+        <p id="status" role="status" aria-live="polite"></p>
+    </form>
+</div>
+
+<script>
+    const form = document.getElementById("feedbackForm");
+    const status = document.getElementById("status");
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const button = form.querySelector("button");
+        button.disabled = true;
+        status.textContent = "Saving your feedback...";
+
+        const payload = {
+            task: document.getElementById("task").value,
+            ease: document.getElementById("ease").value,
+            usefulness: document.getElementById("usefulness").value,
+            would_use: document.getElementById("would_use").value,
+            comments: document.getElementById("comments").value.trim()
+        };
+
+        try {
+            const response = await fetch("/api/feedback", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || "Could not save feedback.");
+            }
+
+            status.textContent = result.message;
+            form.reset();
+        } catch (error) {
+            status.textContent =
+                error.message || "Could not connect. Please try again.";
+        } finally {
+            button.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>

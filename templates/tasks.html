@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gardening Task Tracker | GreenBuddy AI</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: Arial, sans-serif;
+      background: #f2f7ef;
+      color: #203b28;
+    }
+    main {
+      max-width: 720px;
+      margin: 25px auto;
+      padding: 24px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px #203b2812;
+    }
+    h1 { color: #267341; }
+    .form { display: grid; gap: 12px; }
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd8c8;
+      font: inherit;
+    }
+    button {
+      background: #267341;
+      color: white;
+      cursor: pointer;
+      border: 0;
+    }
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 0;
+      border-bottom: 1px solid #e3eae0;
+    }
+    .task input { width: auto; }
+    .task-info { flex: 1; overflow-wrap: anywhere; }
+    .done .task-name {
+      text-decoration: line-through;
+      color: #788579;
+    }
+    .meta { color: #68776a; font-size: 13px; margin-top: 5px; }
+    .delete { width: auto; background: #a33a32; }
+    .empty { color: #68776a; padding: 18px 0; }
+    a { color: #267341; }
+  </style>
+</head>
+<body>
+<main>
+  <a href="/">← Back to GreenBuddy AI</a>
+  <h1>🌱 Gardening Task Tracker</h1>
+  <p>Plan your gardening work and keep track of your progress.</p>
+
+  <form id="task-form" class="form">
+    <label for="task-name">Task name</label>
+    <input id="task-name" maxlength="120"
+           placeholder="e.g. Water my basil plant" required>
+
+    <label for="task-type">Task type</label>
+    <select id="task-type">
+      <option>Watering</option>
+      <option>Fertilizing</option>
+      <option>Repotting</option>
+      <option>Pest inspection</option>
+      <option>Pruning</option>
+      <option>Other</option>
+    </select>
+
+    <label for="task-date">Due date (optional)</label>
+    <input id="task-date" type="date">
+
+    <button type="submit">Add gardening task</button>
+  </form>
+
+  <h2>Your tasks</h2>
+  <p id="progress" aria-live="polite">0 tasks completed</p>
+  <section id="task-list" aria-live="polite"></section>
+</main>
+
+<script>
+  const STORAGE_KEY = "greenbuddy_gardening_tasks_v1";
+  const form = document.getElementById("task-form");
+  const list = document.getElementById("task-list");
+  const progress = document.getElementById("progress");
+
+  function loadTasks() {
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      return Array.isArray(data) ? data.filter(
+        t => t && typeof t.id === "string" &&
+             typeof t.name === "string" &&
+             typeof t.done === "boolean"
+      ) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  let tasks = loadTasks();
+
+  function saveTasks() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      return true;
+    } catch {
+      alert("Could not save tasks in this browser.");
+      return false;
+    }
+  }
+
+  function renderTasks() {
+    list.replaceChildren();
+    const completed = tasks.filter(t => t.done).length;
+    progress.textContent =
+      `${completed} of ${tasks.length} tasks completed`;
+
+    if (!tasks.length) {
+      const message = document.createElement("p");
+      message.className = "empty";
+      message.textContent = "No tasks yet. Add your first gardening task!";
+      list.appendChild(message);
+      return;
+    }
+
+    tasks.forEach(task => {
+      const row = document.createElement("div");
+      row.className = "task" + (task.done ? " done" : "");
+
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.checked = task.done;
+      check.setAttribute("aria-label", "Mark task complete");
+      check.addEventListener("change", () => {
+        task.done = check.checked;
+        if (saveTasks()) renderTasks();
+      });
+
+      const info = document.createElement("div");
+      info.className = "task-info";
+
+      const name = document.createElement("div");
+      name.className = "task-name";
+      name.textContent = task.name;
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = task.type +
+        (task.date ? " · Due " + task.date : "");
+
+      info.append(name, meta);
+
+      const remove = document.createElement("button");
+      remove.className = "delete";
+      remove.textContent = "Delete";
+      remove.setAttribute("aria-label", "Delete " + task.name);
+      remove.addEventListener("click", () => {
+        tasks = tasks.filter(t => t.id !== task.id);
+        if (saveTasks()) renderTasks();
+      });
+
+      row.append(check, info, remove);
+      list.appendChild(row);
+    });
+  }
+
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+
+    const name = document.getElementById("task-name").value.trim();
+    const type = document.getElementById("task-type").value;
+    const date = document.getElementById("task-date").value;
+
+    if (!name) return;
+
+    tasks.unshift({
+      id: crypto.randomUUID(),
+      name,
+      type,
+      date,
+      done: false
+    });
+
+    if (saveTasks()) {
+      form.reset();
+      renderTasks();
+    } else {
+      tasks.shift();
+    }
+  });
+
+  renderTasks();
+</script>
+</body>
+</html>
